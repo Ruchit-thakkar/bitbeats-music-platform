@@ -7,24 +7,31 @@ async function registerController(req, res) {
   try {
     const { fullName, email, password, phone } = req.body;
 
+    // 1. Safe object chaining (?.) prevents crashes if fullName is undefined
     if (
-      !fullName ||
-      !fullName.firstName ||
-      !fullName.lastName ||
+      !fullName?.firstName ||
+      !fullName?.lastName ||
       !email ||
-      !password
+      !password ||
+      !phone // Added phone requirement since they can log in with it
     ) {
       return res.status(400).json({
         success: false,
-        message: "First name, last name, email and password are required",
+        message:
+          "First name, last name, email, phone, and password are required",
       });
     }
 
-    const isEmailExist = await userModel.findOne({ email });
-    if (isEmailExist) {
-      return res
-        .status(409)
-        .json({ success: false, message: "Email already registered" });
+    // 2. Check if Email OR Phone already exists
+    const isUserExist = await userModel.findOne({
+      $or: [{ email }, { phone }],
+    });
+
+    if (isUserExist) {
+      return res.status(409).json({
+        success: false,
+        message: "User with this email or phone number already exists",
+      });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -42,7 +49,7 @@ async function registerController(req, res) {
       data: { id: user._id, email: user.email },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Register Error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
@@ -54,23 +61,31 @@ async function loginController(req, res) {
     if ((!email && !phone) || !password) {
       return res.status(400).json({
         success: false,
-        message: "Email/phone and password are required",
+        message: "Email or phone, and password are required",
       });
     }
 
-    const user = await userModel.findOne({ $or: [{ email }, { phone }] });
-    if (!user)
+    // 3. Dynamically build the search query so we don't pass 'undefined' to MongoDB
+    const loginQuery = [];
+    if (email) loginQuery.push({ email });
+    if (phone) loginQuery.push({ phone });
+
+    const user = await userModel.findOne({ $or: loginQuery });
+
+    if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
       return res
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
+    }
 
-    // generate token
+    // Generate token
     const token = jwt.sign(
       {
         userId: user._id,
@@ -80,10 +95,10 @@ async function loginController(req, res) {
       { expiresIn: "7d" },
     );
 
-    // set cookie (recommended)
+    // Set cookie
     res.cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (https)
+      secure: process.env.NODE_ENV === "production", // Automatically handles local vs production
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
@@ -103,7 +118,7 @@ async function loginController(req, res) {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Login Error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
@@ -119,7 +134,7 @@ async function logoutController(req, res) {
       .status(200)
       .json({ success: true, message: "Logout successful" });
   } catch (error) {
-    console.error(error);
+    console.error("Logout Error:", error);
     return res.status(500).json({ success: false, message: "Server error" });
   }
 }
