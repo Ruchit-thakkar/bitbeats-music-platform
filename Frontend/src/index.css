@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  /* Custom Colors from the UI Design */
+  --color-background: #121212;
+  --color-surface: #181818;
+  --color-surface-hover: #242424;
+  --color-surfaceGlass: rgba(30, 30, 36, 0.7);
+
+  /* The Neon Lime Accent */
+  --color-lime: #d4ff3a;
+  --color-lime-dark: #bbe622;
+
+  /* The Discover Weekly Card Gradient Colors */
+  --color-purpleCard-light: #e8d1ff;
+  --color-purpleCard-dark: #c9a0ff;
+
+  /* Font */
+  --font-sans: "Inter", sans-serif;
+}
+
+/* Base styles to ensure the dark theme covers the whole screen */
+@layer base {
+  body {
+    background-color: var(--color-background);
+    color: white;
+  }
+}
+
+/* Optional: Hide scrollbar for the horizontal scrolling categories */
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
