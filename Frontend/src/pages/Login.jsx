@@ -1,13 +1,18 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+
+  // Determine where to send the user after login
+  // Falls back to "/songs" if they navigated directly to the login page
+  const destination = location.state?.from?.pathname || "/songs";
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,10 +21,14 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+
     const result = await login(formData);
+
     setLoading(false);
-    if (result.success) {
-      navigate("/songs"); // Send them to the music library!
+
+    if (result && result.success) {
+      // Navigate to their intended destination, replacing the history stack
+      navigate(destination, { replace: true });
     }
   };
 
