@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "http://localhost:5000", // <-- This must match your backend port!
+  baseURL: "https://bitbeats-music-platform.onrender.com", // <-- This must match your backend port!
   withCredentials: true, // Required for cookies!
 });
 

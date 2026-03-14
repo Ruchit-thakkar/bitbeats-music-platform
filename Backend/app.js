@@ -29,6 +29,7 @@ app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/songs", require("./routes/song.routes"));
 app.use("/api/playlists", require("./routes/playlist.routes"));
 // Serve static React files in production
+
 app.use(express.static(path.join(__dirname, "../public")));
 
 app.get("*name", (req, res) => {
