@@ -9,7 +9,6 @@ const connectTodb = require("./db/db");
 connectTodb();
 
 const app = express();
-const __dirnamePath = path.resolve();
 // Middlewares
 app.use(cookieParser());
 app.use(express.json());
@@ -29,10 +28,10 @@ app.use("/api/auth", require("./routes/auth.routes"));
 app.use("/api/songs", require("./routes/song.routes"));
 app.use("/api/playlists", require("./routes/playlist.routes"));
 // Serve static React files in production
-app.use(express.static(path.join(__dirnamePath, "frontend/dist")));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirnamePath, "frontend/dist/index.html"));
+app.get("/*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 module.exports = app;
