@@ -3,9 +3,9 @@ const userModel = require("../models/user.model");
 
 async function authMiddleware(req, res, next) {
   try {
-    // 1️⃣ token get from cookie OR header
+    // 🟢 FIX: પહેલા Header માં નવી ટોકન ચેક કરો, ના મળે તો જ Cookie માં જુઓ.
     const token =
-      req.cookies?.token || req.headers.authorization?.split(" ")[1];
+      req.headers.authorization?.split(" ")[1] || req.cookies?.token;
 
     if (!token) {
       return res.status(401).json({

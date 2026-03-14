@@ -11,7 +11,7 @@ import {
   CheckCircle2,
   Sparkles,
   MoreVertical,
-  Loader2, // 🟢 Added Loader2 for the new modal optimization
+  Loader2,
 } from "lucide-react";
 import api from "../utils/api";
 import { useAudio } from "../context/AudioContext";
@@ -27,7 +27,7 @@ const Songs = () => {
 
   // Playlist Modal States
   const [isPlaylistModalOpen, setIsPlaylistModalOpen] = useState(false);
-  const [isFetchingPlaylists, setIsFetchingPlaylists] = useState(false); // 🟢 NEW: Modal loading state
+  const [isFetchingPlaylists, setIsFetchingPlaylists] = useState(false);
   const [songToAdd, setSongToAdd] = useState(null);
   const [userPlaylists, setUserPlaylists] = useState([]);
   const [addingStatus, setAddingStatus] = useState({ id: null, status: "" });
@@ -40,7 +40,9 @@ const Songs = () => {
 
   const fetchSongs = async () => {
     try {
-      const { data } = await api.get("/api/songs/my-songs");
+      const { data } = await api.get("/api/songs/my-songs", {
+        withCredentials: true,
+      });
       if (data.success) setSongs(data.data);
     } catch (error) {
       console.error("Failed to fetch songs", error);
@@ -52,7 +54,15 @@ const Songs = () => {
   const toggleLike = async (e, id) => {
     e.stopPropagation();
     try {
-      const { data } = await api.post(`/api/songs/toggle-like/${id}`);
+      // 🟢 ADDED: withCredentials safeguard
+      const { data } = await api.post(
+        `/api/songs/toggle-like/${id}`,
+        {},
+        {
+          withCredentials: true,
+        },
+      );
+
       if (data.success) {
         setSongs((prev) =>
           prev.map((s) =>
@@ -72,29 +82,39 @@ const Songs = () => {
     }
   };
 
-  // 🟢 OPTIMIZED: Now handles loading states properly so the UI doesn't jump
   const openPlaylistModal = async (e, song) => {
     e.stopPropagation();
     setSongToAdd(song);
     setIsPlaylistModalOpen(true);
-    setIsFetchingPlaylists(true); // Start loading spinner in modal
+    setIsFetchingPlaylists(true);
     try {
-      const { data } = await api.get("/api/playlists/my-playlists");
+      // 🟢 ADDED: withCredentials safeguard
+      const { data } = await api.get("/api/playlists/my-playlists", {
+        withCredentials: true,
+      });
       if (data.success) setUserPlaylists(data.data);
     } catch (error) {
       console.error("Failed to fetch playlists", error);
     } finally {
-      setIsFetchingPlaylists(false); // Stop loading spinner
+      setIsFetchingPlaylists(false);
     }
   };
 
   const handleAddToPlaylist = async (playlistId) => {
     setAddingStatus({ id: playlistId, status: "loading" });
     try {
-      const { data } = await api.post("/api/playlists/add-song", {
-        playlistId,
-        songId: songToAdd._id,
-      });
+      // 🟢 ADDED: withCredentials safeguard
+      const { data } = await api.post(
+        "/api/playlists/add-song",
+        {
+          playlistId,
+          songId: songToAdd._id,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+
       if (data.success) {
         setAddingStatus({ id: playlistId, status: "success" });
         setTimeout(() => {
@@ -110,13 +130,12 @@ const Songs = () => {
     }
   };
 
-  // 🟢 CLEAN CANCEL HANDLER
   const handleCloseModal = () => {
     setIsPlaylistModalOpen(false);
     setTimeout(() => {
       setAddingStatus({ id: null, status: "" });
       setSongToAdd(null);
-    }, 300); // Wait for fade-out animation before clearing data
+    }, 300);
   };
 
   const filteredAndSortedSongs = useMemo(() => {
