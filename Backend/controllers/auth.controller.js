@@ -70,15 +70,20 @@ async function loginController(req, res) {
         .status(401)
         .json({ success: false, message: "Invalid credentials" });
 
+    // generate token
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      {
+        userId: user._id,
+        role: user.role,
+      },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
+    // set cookie (recommended)
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: false, // true in production (https)
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
